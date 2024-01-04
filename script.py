@@ -115,19 +115,69 @@ for map_option in map_options[1:]:  # Start from the second map
         # Print the number of lineups
         print(f"Number of lineups for {data_value}: {len(lineup_boxes)}")
 
+        # List to store data-ids of lineup boxes
+        lineup_box_ids = []
+
         # Loop through each lineup box
         for lineup_box in lineup_boxes:
             try:
-                # Extract lineup box title
+                # Extract lineup box title and data-id
                 lineup_box_title = lineup_box.find_element(
                     By.CLASS_NAME, "lineup-box-title").text
-                print(f"Lineup box title: {lineup_box_title}")
+                data_id = lineup_box.get_attribute("data-id")
+
+                # Store the data-id for later use
+                lineup_box_ids.append(data_id)
+
+                # Print lineup box information
+                print(f"Lineup box title: {
+                      lineup_box_title} | data-id: {data_id}")
 
             except StaleElementReferenceException:
-                # Handle StaleElementReferenceException by finding the element again
+                # Handle StaleElementReferenceException by finding the lineup_boxes again
                 lineup_boxes = driver.find_elements(
                     By.CSS_SELECTOR, "#lineups_grid .lineup-box")
                 break
 
+        # Click on each lineup box using the stored data-ids
+        for data_id in lineup_box_ids:
+            try:
+                # Locate the lineup box using data-id
+                lineup_box = driver.find_element(
+                    By.CSS_SELECTOR, f".lineup-box[data-id='{data_id}']")
+
+                # Scroll the lineup box into view
+                driver.execute_script(
+                    "arguments[0].scrollIntoView();", lineup_box)
+
+                # Click on the lineup box using JavaScript
+                driver.execute_script("arguments[0].click();", lineup_box)
+
+                # Wait for the modal to be present
+                modal_wait = WebDriverWait(driver, 10)
+                modal = modal_wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "#viewer_background #viewer_container #viewer_full")))
+                time.sleep(3)
+
+                # Extract modal viewer title
+                modal_viewer_title = modal.find_element(
+                    By.CSS_SELECTOR, "#viewer_title_text").text
+                print(f"Modal viewer title: {modal_viewer_title}")
+
+                # Close the modal
+                modal.find_element(
+                    By.CSS_SELECTOR, "#viewer_close").click()
+
+            except StaleElementReferenceException:
+                # Handle StaleElementReferenceException by finding the lineup_boxes again
+                lineup_boxes = driver.find_elements(
+                    By.CSS_SELECTOR, "#lineups_grid .lineup-box")
+                break
+
+            except StaleElementReferenceException:
+                # Handle StaleElementReferenceException by finding the lineup_boxes again
+                lineup_boxes = driver.find_elements(
+                    By.CSS_SELECTOR, "#lineups_grid .lineup-box")
+                break
     except NoSuchElementException:
         print("No 'Top Results' found for map:", data_value)

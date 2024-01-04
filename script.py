@@ -90,7 +90,7 @@ for map_option in map_options[1:]:  # Start from the second map
 
             # Calculate the target scroll position (e.g., 90% from the top)
             target_scroll_position = int(driver.execute_script(
-                "return (document.body.scrollHeight * 0.9);"))
+                "return (document.body.scrollHeight * 0.95);"))
 
             # Scroll to the calculated position
             driver.execute_script(
@@ -106,25 +106,28 @@ for map_option in map_options[1:]:  # Start from the second map
                 break
             last_height = new_height
 
+        time.sleep(5)
+
+        # Find all elements with the class 'lineup-box' within the lineups_grid
+        lineup_boxes = driver.find_elements(
+            By.CSS_SELECTOR, "#lineups_grid .lineup-box")
+
+        # Print the number of lineups
+        print(f"Number of lineups for {data_value}: {len(lineup_boxes)}")
+
+        # Loop through each lineup box
+        for lineup_box in lineup_boxes:
+            try:
+                # Extract lineup box title
+                lineup_box_title = lineup_box.find_element(
+                    By.CLASS_NAME, "lineup-box-title").text
+                print(f"Lineup box title: {lineup_box_title}")
+
+            except StaleElementReferenceException:
+                # Handle StaleElementReferenceException by finding the element again
+                lineup_boxes = driver.find_elements(
+                    By.CSS_SELECTOR, "#lineups_grid .lineup-box")
+                break
+
     except NoSuchElementException:
         print("No 'Top Results' found for map:", data_value)
-
-    time.sleep(5)
-
-    # Find all elements with the class 'lineup-box' within the lineups_grid
-    lineup_boxes = driver.find_elements(
-        By.CSS_SELECTOR, "#lineups_grid .lineup-box")
-
-    # Loop through each lineup box
-    for lineup_box in lineup_boxes:
-        try:
-            # Extract lineup box title
-            lineup_box_title = lineup_box.find_element(
-                By.CLASS_NAME, "lineup-box-title").text
-            print(f"Lineup box title: {lineup_box_title}")
-
-        except StaleElementReferenceException:
-            # Handle StaleElementReferenceException by finding the element again
-            lineup_boxes = driver.find_elements(
-                By.CSS_SELECTOR, "#lineups_grid .lineup-box")
-            break

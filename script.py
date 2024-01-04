@@ -126,6 +126,8 @@ for map_option in map_options[2:]:  # Start from the third map
                         driver.execute_script(
                             "arguments[0].click();", lineup_box)
 
+                        time.sleep(5)
+
                         # Wait for the modal to be present
                         modal_wait = WebDriverWait(driver, 10)
                         modal = modal_wait.until(EC.presence_of_element_located(
@@ -141,7 +143,9 @@ for map_option in map_options[2:]:  # Start from the third map
 
                         # Extract description text from viewer_description_text
                         viewer_description_text = driver.find_element(
-                            By.ID, "viewer_description_text").text.strip()
+                            By.ID, "viewer_description_text")
+
+                        description_text = viewer_description_text.text
 
                         # Extract image URLs for the lineup
                         image_base_url = f"https://lineupsvalorant.com/static/lineup_images/{
@@ -172,7 +176,7 @@ for map_option in map_options[2:]:  # Start from the third map
                             'title': lineup_box_title,
                             'data_id': data_id,
                             'image_urls': image_urls,
-                            'description_text': viewer_description_text,
+                            'description_text': description_text,
                             'agent_images': agent_images,
                             'ability_images': ability_images
                         }

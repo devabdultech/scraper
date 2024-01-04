@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
 from selenium.common.exceptions import (
     StaleElementReferenceException,
     NoSuchElementException,
@@ -79,35 +80,36 @@ for map_option in map_options[1:]:  # Start from the second map
         total_results = int(
             total_results_str) if total_results_str.isdigit() else 0
 
+        SCROLL_PAUSE_TIME = 5
+
+        # Get scroll height
+        last_height = driver.execute_script(
+            "return document.body.scrollHeight")
+
         while True:
-            # Get the current number of lineup boxes
-            current_count = len(driver.find_elements(
-                By.CSS_SELECTOR, "#lineups_grid .lineup-box"))
 
-            # Scroll down to trigger lazy loading
+            # Calculate the target scroll position (e.g., 90% from the top)
+            target_scroll_position = int(driver.execute_script(
+                "return (document.body.scrollHeight * 0.9);"))
+
+            # Scroll to the calculated position
             driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);")
+                f"window.scrollTo(0, {target_scroll_position});")
 
-            # Wait for a short duration to allow new lineup boxes to load
-            time.sleep(3)  # Adjust the sleep duration as needed
+            # Wait to load page
+            time.sleep(SCROLL_PAUSE_TIME)
 
-            # Get the new number of lineup boxes
-            new_count = len(driver.find_elements(
-                By.CSS_SELECTOR, "#lineups_grid .lineup-box"))
-
-            # Check if no new lineup boxes are loaded
-            if new_count == current_count:
+            # Calculate new scroll height and compare with last scroll height
+            new_height = driver.execute_script(
+                "return document.body.scrollHeight")
+            if new_height == last_height:
                 break
-
-            # Check if the total number of results is reached
-            if new_count >= total_results:
-                break
-
-        # Introduce a delay after scrolling and before getting the title
-        time.sleep(3)  # Adjust the sleep duration as needed
+            last_height = new_height
 
     except NoSuchElementException:
         print("No 'Top Results' found for map:", data_value)
+
+    time.sleep(5)
 
     # Find all elements with the class 'lineup-box' within the lineups_grid
     lineup_boxes = driver.find_elements(

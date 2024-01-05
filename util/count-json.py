@@ -1,5 +1,8 @@
 import json
 
+GREEN = '\033[92m'
+RESET = '\033[0m'
+
 
 def count_objects_in_json_file(json_file_path):
     # Read the JSON file
@@ -18,4 +21,4 @@ def count_objects_in_json_file(json_file_path):
 
 json_file_path = '../scraped_data_Bind_all.json'
 number_of_objects = count_objects_in_json_file(json_file_path)
-print(f'Number of objects in the JSON file: {number_of_objects}')
+print(f'{GREEN}Number of objects in the JSON file: {number_of_objects}{RESET}')

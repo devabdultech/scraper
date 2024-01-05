@@ -130,7 +130,7 @@ def scrape_lineups(start_map=None, start_side=None):
                     By.CSS_SELECTOR, "#lineups_grid .lineup-box")
 
                 print(f"{GREEN}Found {len(lineup_boxes)
-                                      } lineup boxes for {side} side{RESET}")
+                      } lineup boxes for {side} side{RESET}")
 
                 scraped_data = []
 
@@ -190,11 +190,9 @@ def scrape_lineups(start_map=None, start_side=None):
                             for img in images:
                                 img_url = img.get_attribute("src")
                                 if 'agents' in img_url:
-                                    agent_images.append(
-                                        f"https://lineupsvalorant.com{img_url}")
+                                    agent_images.append(img_url)
                                 elif 'abilities' in img_url:
-                                    ability_images.append(
-                                        f"https://lineupsvalorant.com{img_url}")
+                                    ability_images.append(img_url)
 
                         # Store the scraped data in a dictionary
                         lineup_data = {
@@ -209,16 +207,13 @@ def scrape_lineups(start_map=None, start_side=None):
                         # Append the dictionary to the list
                         scraped_data.append(lineup_data)
 
-                        # Save the scraped data to a JSON file (in real-time)
-                        output_filename = f"scraped_data_{
-                            map_name.lower()}_{side.lower()}.json"
-                        with open(output_filename, 'a', encoding='utf-8') as json_file:
-                            json.dump(lineup_data, json_file,
+                        # Print and save the scraped data to a JSON file (in real-time)
+                        output_filename = f"scraped_data_{map_name.lower()}_{side.lower()}.json"
+                        with open(output_filename, 'w', encoding='utf-8') as json_file:
+                            json.dump(scraped_data, json_file,
                                       ensure_ascii=False, indent=4)
-                            json_file.write('\n')
-
-                        print(f"Scraped data for {
-                              side} side saved to {output_filename}")
+                        print(
+                            f"Scraped data for {side} side saved in {output_filename}")
 
                         # Close the modal using JavaScript
                         driver.execute_script(

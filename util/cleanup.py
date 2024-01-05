@@ -22,7 +22,5 @@ def process_json_files(*file_paths):
                 json.dump(data, outfile, indent=2)
 
 
-# Example usage:
-
-
-cleaned_data = process_json_files("../scraped_data_bind_all.json", "../scraped_data_bind_defense.json", "../scraped_data_bind_attack.json", "../scraped_data_haven_all.json", "../scraped_data_haven_defense.json")
+cleaned_data = process_json_files("../scraped_data_bind_all.json", "../scraped_data_bind_defense.json", "../scraped_data_bind_attack.json",
+                                  "../scraped_data_haven_all.json", "../scraped_data_haven_defense.json", "../scraped_data_haven_attack.json", "../scraped_data_sunset_all.json", "../scraped_data_sunset_defense.json")

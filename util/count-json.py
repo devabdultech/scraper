@@ -19,6 +19,6 @@ def count_objects_in_json_file(json_file_path):
             return 0  # JSON data is neither a list nor a dictionary
 
 
-json_file_path = '../scraped_data_haven_attack.json'
+json_file_path = '../scraped_data_sunset_defense.json'
 number_of_objects = count_objects_in_json_file(json_file_path)
 print(f'{GREEN}Number of objects in the JSON file: {number_of_objects}{RESET}')

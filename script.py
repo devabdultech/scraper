@@ -62,7 +62,7 @@ def scrape_lineups(start_map=None, start_side=None):
             driver.execute_script("arguments[0].scrollIntoView();", map_option)
 
             # Wait for the element to be clickable
-            wait = WebDriverWait(driver, 10)
+            wait = WebDriverWait(driver, 20)
             element = wait.until(
                 EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, f"a[data-value='{data_value}']")
@@ -123,7 +123,7 @@ def scrape_lineups(start_map=None, start_side=None):
                         break
                     last_height = new_height
 
-                time.sleep(5)  # Wait for 5 seconds after scrolling
+                time.sleep(3)  # Wait for 5 seconds after scrolling
 
                 # Find all elements with the class 'lineup-box' within the lineups_grid
                 lineup_boxes = driver.find_elements(
@@ -146,17 +146,18 @@ def scrape_lineups(start_map=None, start_side=None):
                         driver.execute_script(
                             "arguments[0].click();", lineup_box)
 
-                        time.sleep(5)
+                        time.sleep(6)
 
                         # Wait for the modal to be present
-                        modal_wait = WebDriverWait(driver, 10)
+                        modal_wait = WebDriverWait(driver, 20)
                         modal = modal_wait.until(
                             EC.presence_of_element_located(
                                 (By.CSS_SELECTOR, "#viewer_background #viewer_container #viewer_full"))
                         )
 
                         # Extract max image number from #viewer_max_image span
-                        max_image_element = wait.until(
+                        image_wait = WebDriverWait(driver, 20)
+                        max_image_element = image_wait.until(
                             EC.presence_of_element_located(
                                 (By.ID, "viewer_max_image"))
                         )
@@ -166,11 +167,11 @@ def scrape_lineups(start_map=None, start_side=None):
                             max_image_element.text) if max_image_element.text else 3
 
                         # Extract description text from viewer_description_text
-                        viewer_description_text = WebDriverWait(driver, 10).until(
+                        viewer_description_text = WebDriverWait(driver, 30).until(
                             lambda driver: driver.find_element(By.ID, "viewer_description_text"))
 
                         description_text = viewer_description_text.text.replace(
-                            '<br>', '\n')
+                            '<br>', ' ')
 
                         # Extract image URLs for the lineup
                         image_base_url = f"https://lineupsvalorant.com/static/lineup_images/{
@@ -179,20 +180,26 @@ def scrape_lineups(start_map=None, start_side=None):
                             i}.webp" for i in range(1, max_image_number + 1)]
 
                         # Extract agent and ability images from viewer_description_abilities
-                        agent_images = []
-                        ability_images = []
+                        agent_names = []
+                        ability_names = []
                         viewer_description_abilities = driver.find_element(
                             By.ID, "viewer_description_abilities")
 
                         if viewer_description_abilities:
                             images = viewer_description_abilities.find_elements(
                                 By.TAG_NAME, 'img')
-                            for img in images:
-                                img_url = img.get_attribute("src")
-                                if 'agents' in img_url:
-                                    agent_images.append(img_url)
-                                elif 'abilities' in img_url:
-                                    ability_images.append(img_url)
+                        for img in images:
+                            img_url = img.get_attribute("src")
+                            if 'agents' in img_url:
+                                # Extract the agent name from the URL
+                                agent_name = img_url.split(
+                                    '/')[-1].split('.')[0]
+                                agent_names.append(agent_name)
+                            elif 'abilities' in img_url:
+                                # Extract the ability name from the URL
+                                ability_name = img_url.split(
+                                    '/')[-1].split('.')[0].replace('%20', ' ')
+                                ability_names.append(ability_name)
 
                         # Store the scraped data in a dictionary
                         lineup_data = {
@@ -200,8 +207,8 @@ def scrape_lineups(start_map=None, start_side=None):
                             'data_id': data_id,
                             'image_urls': image_urls,
                             'description_text': description_text,
-                            'agent_images': agent_images,
-                            'ability_images': ability_images
+                            'agent': agent_names,
+                            'ability': ability_names
                         }
 
                         # Append the dictionary to the list
@@ -238,4 +245,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Sunset")
+scrape_lineups(start_map="Sunset", start_side="Attack")

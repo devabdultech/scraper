@@ -130,7 +130,7 @@ def scrape_lineups(start_map=None, start_side=None):
                     By.CSS_SELECTOR, "#lineups_grid .lineup-box")
 
                 print(f"{GREEN}Found {len(lineup_boxes)
-                      } lineup boxes for {side} side{RESET}")
+                                      } lineup boxes for {side} side{RESET}")
 
                 scraped_data = []
 
@@ -166,8 +166,8 @@ def scrape_lineups(start_map=None, start_side=None):
                             max_image_element.text) if max_image_element.text else 3
 
                         # Extract description text from viewer_description_text
-                        viewer_description_text = driver.find_element(
-                            By.ID, "viewer_description_text")
+                        viewer_description_text = WebDriverWait(driver, 10).until(
+                            lambda driver: driver.find_element(By.ID, "viewer_description_text"))
 
                         description_text = viewer_description_text.text.replace(
                             '<br>', '\n')
@@ -208,7 +208,8 @@ def scrape_lineups(start_map=None, start_side=None):
                         scraped_data.append(lineup_data)
 
                         # Print and save the scraped data to a JSON file (in real-time)
-                        output_filename = f"scraped_data_{map_name.lower()}_{side.lower()}.json"
+                        output_filename = f"scraped_data_{
+                            map_name.lower()}_{side.lower()}.json"
                         with open(output_filename, 'w', encoding='utf-8') as json_file:
                             json.dump(scraped_data, json_file,
                                       ensure_ascii=False, indent=4)
@@ -237,4 +238,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Haven")
+scrape_lineups(start_map="Sunset")

@@ -39,13 +39,13 @@ def scrape_lineups(start_map=None, start_side=None):
             skip_first_map = False
             continue
 
-        # Skip if this map has already been scraped
-        if start_map and data_value != start_map:
-            print(f"Skipping map: {data_value}")
-            continue
-
         # Extract the map name from the map option
         map_name = map_option.text.strip()
+
+        # Skip if this map has already been scraped
+        if start_map and map_name != start_map:
+            print(f"Skipping map: {map_name}")
+            continue
 
         print(f"{GREEN}Clicking on map: {
               map_name} with data-value: {data_value}{RESET}")
@@ -224,15 +224,6 @@ def scrape_lineups(start_map=None, start_side=None):
                                 driver.execute_script(
                                     "document.getElementById('viewer_close').click();")
 
-                                # Save the scraped data to a JSON file (in real-time)
-                                output_filename = f"scraped_data_{
-                                    map_name.lower()}_{side.lower()}.json"
-                                with open(output_filename, 'w', encoding='utf-8') as json_file:
-                                    json.dump(scraped_data, json_file,
-                                              ensure_ascii=False, indent=4)
-                                print(f"Scraped data for {
-                                      side} side saved to {output_filename}")
-
                             except StaleElementReferenceException:
                                 # Handle StaleElementReferenceException by finding the lineup_boxes again
                                 lineup_boxes = driver.find_elements(
@@ -244,6 +235,15 @@ def scrape_lineups(start_map=None, start_side=None):
                         lineup_boxes = driver.find_elements(
                             By.CSS_SELECTOR, "#lineups_grid .lineup-box")
                         break
+
+                # Save the scraped data to a JSON file (outside the loop)
+                output_filename = f"scraped_data_{
+                    map_name.lower()}_{side.lower()}.json"
+                with open(output_filename, 'w', encoding='utf-8') as json_file:
+                    json.dump(scraped_data, json_file,
+                              ensure_ascii=False, indent=4)
+                print(f"Scraped data for {
+                      side} side saved to {output_filename}")
 
         except StaleElementReferenceException:
             # Handle StaleElementReferenceException by finding the lineup_boxes again
@@ -257,4 +257,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Bind", start_side="Defense")
+scrape_lineups(start_map="Bind", start_side="Attack")

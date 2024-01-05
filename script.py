@@ -69,11 +69,22 @@ for map_option in map_options[3:]:  # Start from the third map
         # Loop through each side
         for side, file_suffix in zip(sides, side_file_suffixes):
             # Click on the corresponding side button
-            side_button = driver.find_element(
-                By.XPATH, f"//button[contains(@class, 'search_toggle') and text()='{side}']")
-            side_button.click()
+            side_button_xpath = f"//button[contains(@class, 'search_toggle') and contains(text(), '{
+                side}')]"
+            try:
+                side_button = driver.find_element(By.XPATH, side_button_xpath)
 
-            time.sleep(5)  # Wait for 5 seconds after clicking on the side
+                # Scroll to the side button's location
+                driver.execute_script(
+                    "arguments[0].scrollIntoView();", side_button)
+
+                # Click on the side button
+                side_button.click()
+
+                time.sleep(5)  # Wait for 5 seconds after clicking on the side
+
+            except NoSuchElementException:
+                print(f"Side button not found for: {side}")
 
             # Scroll down to load more lineup boxes
             SCROLL_PAUSE_TIME = 6

@@ -132,7 +132,6 @@ def scrape_lineups(start_map=None, start_side=None):
                 print(f"{GREEN}Found {len(lineup_boxes)
                                       } lineup boxes for {side} side{RESET}")
 
-                # List to store scraped data
                 scraped_data = []
 
                 # Loop through each lineup box
@@ -143,107 +142,93 @@ def scrape_lineups(start_map=None, start_side=None):
                             By.CLASS_NAME, "lineup-box-title").text
                         data_id = lineup_box.get_attribute("data-id")
 
-                        # Store the data-id for later use
-                        lineup_box_ids = [data_id]
+                        # Click on the lineup box using JavaScript
+                        driver.execute_script(
+                            "arguments[0].click();", lineup_box)
 
-                        # Click on each lineup box using the stored data-ids
-                        for data_id in lineup_box_ids:
-                            try:
-                                # Locate the lineup box using data-id
-                                lineup_box = driver.find_element(
-                                    By.CSS_SELECTOR, f".lineup-box[data-id='{data_id}']")
+                        time.sleep(5)
 
-                                # Scroll the lineup box into view
-                                driver.execute_script(
-                                    "arguments[0].scrollIntoView();", lineup_box)
+                        # Wait for the modal to be present
+                        modal_wait = WebDriverWait(driver, 10)
+                        modal = modal_wait.until(
+                            EC.presence_of_element_located(
+                                (By.CSS_SELECTOR, "#viewer_background #viewer_container #viewer_full"))
+                        )
 
-                                # Click on the lineup box using JavaScript
-                                driver.execute_script(
-                                    "arguments[0].click();", lineup_box)
+                        # Extract max image number from #viewer_max_image span
+                        max_image_element = wait.until(
+                            EC.presence_of_element_located(
+                                (By.ID, "viewer_max_image"))
+                        )
+                        max_image_element = driver.find_element(
+                            By.CSS_SELECTOR, "#viewer_max_image")
+                        max_image_number = int(
+                            max_image_element.text) if max_image_element.text else 3
 
-                                time.sleep(5)
+                        # Extract description text from viewer_description_text
+                        viewer_description_text = driver.find_element(
+                            By.ID, "viewer_description_text")
 
-                                # Wait for the modal to be present
-                                modal_wait = WebDriverWait(driver, 10)
-                                modal = modal_wait.until(EC.presence_of_element_located(
-                                    (By.CSS_SELECTOR, "#viewer_background #viewer_container #viewer_full")))
+                        description_text = viewer_description_text.text.replace(
+                            '<br>', '\n')
 
-                                # Extract max image number from #viewer_max_image span
-                                max_image_element = wait.until(EC.presence_of_element_located(
-                                    (By.ID, "viewer_max_image")))
-                                max_image_element = driver.find_element(
-                                    By.CSS_SELECTOR, "#viewer_max_image")
-                                max_image_number = int(
-                                    max_image_element.text) if max_image_element.text else 3
+                        # Extract image URLs for the lineup
+                        image_base_url = f"https://lineupsvalorant.com/static/lineup_images/{
+                            data_id}/"
+                        image_urls = [f"{image_base_url}{
+                            i}.webp" for i in range(1, max_image_number + 1)]
 
-                                # Extract description text from viewer_description_text
-                                viewer_description_text = driver.find_element(
-                                    By.ID, "viewer_description_text")
+                        # Extract agent and ability images from viewer_description_abilities
+                        agent_images = []
+                        ability_images = []
+                        viewer_description_abilities = driver.find_element(
+                            By.ID, "viewer_description_abilities")
 
-                                description_text = viewer_description_text.text.replace(
-                                    '<br>', '\n')
+                        if viewer_description_abilities:
+                            images = viewer_description_abilities.find_elements(
+                                By.TAG_NAME, 'img')
+                            for img in images:
+                                img_url = img.get_attribute("src")
+                                if 'agents' in img_url:
+                                    agent_images.append(
+                                        f"https://lineupsvalorant.com{img_url}")
+                                elif 'abilities' in img_url:
+                                    ability_images.append(
+                                        f"https://lineupsvalorant.com{img_url}")
 
-                                # Extract image URLs for the lineup
-                                image_base_url = f"https://lineupsvalorant.com/static/lineup_images/{
-                                    data_id}/"
-                                image_urls = [f"{image_base_url}{
-                                    i}.webp" for i in range(1, max_image_number + 1)]
+                        # Store the scraped data in a dictionary
+                        lineup_data = {
+                            'title': lineup_box_title,
+                            'data_id': data_id,
+                            'image_urls': image_urls,
+                            'description_text': description_text,
+                            'agent_images': agent_images,
+                            'ability_images': ability_images
+                        }
 
-                                # Extract agent and ability images from viewer_description_abilities
-                                agent_images = []
-                                ability_images = []
-                                viewer_description_abilities = driver.find_element(
-                                    By.ID, "viewer_description_abilities")
+                        # Append the dictionary to the list
+                        scraped_data.append(lineup_data)
 
-                                if viewer_description_abilities:
-                                    images = viewer_description_abilities.find_elements(
-                                        By.TAG_NAME, 'img')
-                                    for img in images:
-                                        img_url = img.get_attribute("src")
-                                        if 'agents' in img_url:
-                                            agent_images.append(
-                                                f"https://lineupsvalorant.com{img_url}")
-                                        elif 'abilities' in img_url:
-                                            ability_images.append(
-                                                f"https://lineupsvalorant.com{img_url}")
+                        # Save the scraped data to a JSON file (in real-time)
+                        output_filename = f"scraped_data_{
+                            map_name.lower()}_{side.lower()}.json"
+                        with open(output_filename, 'a', encoding='utf-8') as json_file:
+                            json.dump(lineup_data, json_file,
+                                      ensure_ascii=False, indent=4)
+                            json_file.write('\n')
 
-                                # Store the scraped data in a dictionary
-                                lineup_data = {
-                                    'title': lineup_box_title,
-                                    'data_id': data_id,
-                                    'image_urls': image_urls,
-                                    'description_text': description_text,
-                                    'agent_images': agent_images,
-                                    'ability_images': ability_images
-                                }
+                        print(f"Scraped data for {
+                              side} side saved to {output_filename}")
 
-                                # Append the dictionary to the list
-                                scraped_data.append(lineup_data)
-
-                                # Close the modal using JavaScript
-                                driver.execute_script(
-                                    "document.getElementById('viewer_close').click();")
-
-                            except StaleElementReferenceException:
-                                # Handle StaleElementReferenceException by finding the lineup_boxes again
-                                lineup_boxes = driver.find_elements(
-                                    By.CSS_SELECTOR, "#lineups_grid .lineup-box")
-                                break
+                        # Close the modal using JavaScript
+                        driver.execute_script(
+                            "document.getElementById('viewer_close').click();")
 
                     except StaleElementReferenceException:
                         # Handle StaleElementReferenceException by finding the lineup_boxes again
                         lineup_boxes = driver.find_elements(
                             By.CSS_SELECTOR, "#lineups_grid .lineup-box")
                         break
-
-                # Save the scraped data to a JSON file (outside the loop)
-                output_filename = f"scraped_data_{
-                    map_name.lower()}_{side.lower()}.json"
-                with open(output_filename, 'w', encoding='utf-8') as json_file:
-                    json.dump(scraped_data, json_file,
-                              ensure_ascii=False, indent=4)
-                print(f"Scraped data for {
-                      side} side saved to {output_filename}")
 
         except StaleElementReferenceException:
             # Handle StaleElementReferenceException by finding the lineup_boxes again
@@ -257,4 +242,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Bind", start_side="Attack")
+scrape_lineups(start_map="Haven")

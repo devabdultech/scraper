@@ -123,7 +123,7 @@ def scrape_lineups(start_map=None, start_side=None):
                         break
                     last_height = new_height
 
-                time.sleep(3)  # Wait for 5 seconds after scrolling
+                time.sleep(5)  # Wait for 5 seconds after scrolling
 
                 # Find all elements with the class 'lineup-box' within the lineups_grid
                 lineup_boxes = driver.find_elements(
@@ -245,4 +245,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Sunset", start_side="Attack")
+scrape_lineups(start_map="Sunset", start_side="Defense")

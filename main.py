@@ -165,8 +165,8 @@ def scrape_lineups(start_map=None, start_side=None):
                             time.sleep(5)
 
                             # Wait for viewer_max_image to be populated
-                            max_image_element_wait = WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_max_image"), ""))
-                            max_image_element = driver.find_element(By.ID,  "viewer_max_image")
+                            max_image_element_wait = WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_max_image"), lambda value: value and (value.isdigit() or value == "")))
+                            max_image_element = driver.find_element(By.ID, "viewer_max_image")
                             max_image_number_text = max_image_element.text
                             
                             # Wait for viewer_description_text to be populated

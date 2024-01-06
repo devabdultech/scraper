@@ -164,15 +164,16 @@ def scrape_lineups(start_map=None, start_side=None):
                                 "arguments[0].click();", lineup_box)
                             time.sleep(6)
 
+                            WebDriverWait(driver, 60).until(EC.visibility_of_element_located(By.ID, "viewer_image"))
+
                             # Wait for viewer_max_image to be populated
-                            max_image_element_wait = WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_max_image"), ""))
+                            WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_max_image"), "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
                             max_image_element = driver.find_element(By.ID, "viewer_max_image")
                             max_image_number_text = max_image_element.text
 
                             
                             # Wait for viewer_description_text to be populated
-                            description_text_element_wait = WebDriverWait(driver, 40).until(
-                                EC.text_to_be_present_in_element((By.ID, "viewer_description_text"), ""))
+                            WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_description_text"), ""))
                             description_text_element = driver.find_element(By.ID, "viewer_description_text")
 
                             # Wait for viewer_description_abilities to have at least one element
@@ -181,7 +182,7 @@ def scrape_lineups(start_map=None, start_side=None):
 
                             # Get the required values
                             max_image_number = 3 if not max_image_number_text or not max_image_number_text.isdigit() else int(max_image_number_text)
-                            description_text = description_text_element.text.replace('<br>', ' ')
+                            description_text = description_text_element.text.replace('\n', ' ')
 
                             # Get all the image elements in viewer_description_abilities
                             abilities_images = abilities_element.find_elements(By.TAG_NAME, 'img')

@@ -1,5 +1,6 @@
 import argparse
 import time
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
@@ -70,7 +71,6 @@ def scrape_lineups(start_map=None, start_side=None):
                         "arguments[0].scrollIntoView();", link)
                     driver.execute_script("arguments[0].click();", link)
 
-                    link.click()
                     time.sleep(2)
 
                     print(f"{GREEN}Clicked on map: Data Value: {
@@ -92,6 +92,9 @@ def scrape_lineups(start_map=None, start_side=None):
                     side_buttons = driver.find_elements(
                         By.CSS_SELECTOR, '#side_selector_parent .search_toggles button')
 
+                    scroll_percentage = 10
+                    driver.execute_script(f"window.scrollBy(0, window.innerHeight * {scroll_percentage / 100});")
+                    
                     # Determine the starting index based on the provided start_side
                     start_side_index = 0
                     if start_side:
@@ -144,6 +147,9 @@ def scrape_lineups(start_map=None, start_side=None):
                         print(f"{GREEN}Found {len(lineup_boxes)} lineup boxes for {
                               side_text} side{RESET}")
 
+                        # Scraped data Array
+                        scraped_data = []
+
                         # Iterate through each lineup box
                         for lineup_box in lineup_boxes:
                             # Extract title and data-id
@@ -151,14 +157,74 @@ def scrape_lineups(start_map=None, start_side=None):
                                 By.CLASS_NAME, 'lineup-box-title').text
                             data_id = lineup_box.get_attribute('data-id')
 
-                            print(f"Title: {title}, Data ID: {data_id}")
-
                             # Click on the lineup box to open the modal
                             driver.execute_script(
                                 "arguments[0].scrollIntoView();", lineup_box)
                             driver.execute_script(
                                 "arguments[0].click();", lineup_box)
-                            time.sleep(2)
+                            time.sleep(5)
+
+                            # Wait for viewer_max_image to be populated
+                            max_image_element_wait = WebDriverWait(driver, 60).until(EC.text_to_be_present_in_element((By.ID, "viewer_max_image"), ""))
+                            max_image_element = driver.find_element(By.ID,  "viewer_max_image")
+                            max_image_number_text = max_image_element.text
+                            
+                            # Wait for viewer_description_text to be populated
+                            description_text_element_wait = WebDriverWait(driver, 40).until(
+                                EC.text_to_be_present_in_element((By.ID, "viewer_description_text"), ""))
+                            description_text_element = driver.find_element(By.ID, "viewer_description_text")
+
+                            # Wait for viewer_description_abilities to have at least one element
+                            abilities_element = WebDriverWait(driver, 40).until(
+                                EC.presence_of_element_located((By.ID, "viewer_description_abilities")))
+
+                            # Get the required values
+                            max_image_number = 3 if not max_image_number_text or not max_image_number_text.isdigit() else int(max_image_number_text)
+                            description_text = description_text_element.text.replace('<br>', ' ')
+
+                            # Get all the image elements in viewer_description_abilities
+                            abilities_images = abilities_element.find_elements(By.TAG_NAME, 'img')
+
+                            agent_names = []
+                            ability_names = []
+
+                            for img in abilities_images:
+                                src = img.get_attribute('src')
+                                name = src.split('/')[-1].split('.')[0]  # Extracts the name without extension
+
+                                if 'agents' in src:
+                                    agent_names.append(name)
+                                elif 'abilities' in src:
+                                    name = name.replace('%20', ' ')
+                                    ability_names.append(name)
+
+                            # Extract image URLs for the lineup
+                            image_base_url = f"https://lineupsvalorant.com/static/lineup_images/{data_id}/"
+                            image_urls = [f"{image_base_url}{i}.webp" for i in range(1, max_image_number + 1)]
+
+                            # Save the data in the specified format
+                            lineup_data = {
+                                'title': title,
+                                'data_id': data_id,
+                                'image_urls': image_urls,
+                                'description_text': description_text,
+                                'agent': agent_names,
+                                'ability': ability_names
+                            }
+
+                            # Append the dictionary to the list
+                            scraped_data.append(lineup_data)
+
+                            # Save to JSON file
+                            map_name_lower = link.get_attribute('data-value').lower()
+                            side_lower = side_text.lower()
+                            filename = f"scraped_data_{map_name_lower}_{side_lower}.json"
+
+                            with open(filename, 'w', encoding='utf-8') as json_file:
+                                json.dump(scraped_data, json_file,
+                                      ensure_ascii=False, indent=4)
+
+                            print(f"Scraped data for {filename}")
 
                     break
 

@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
 
 GREEN = '\033[92m'
 RESET = '\033[0m'
@@ -24,8 +24,8 @@ def scrape_lineups(start_map=None, start_side=None):
     driver = webdriver.Chrome(service=chrome_service, options=options)
 
     # Navigate to the website
-    driver.get("https://lineupsvalorant.com/")
     driver.maximize_window()
+    driver.get("https://lineupsvalorant.com/")
 
     # Find all the map options
     map_options = driver.find_elements(By.CLASS_NAME, "map_selector_option")
@@ -51,18 +51,11 @@ def scrape_lineups(start_map=None, start_side=None):
               map_name} with data-value: {data_value}{RESET}")
 
         try:
-            # Close the viewer modal if it's open
-            try:
-                driver.execute_script(
-                    "document.getElementById('viewer_close').click();")
-            except NoSuchElementException:
-                pass
-
             # Scroll the element into view
             driver.execute_script("arguments[0].scrollIntoView();", map_option)
 
             # Wait for the element to be clickable
-            wait = WebDriverWait(driver, 20)
+            wait = WebDriverWait(driver, 30)
             element = wait.until(
                 EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, f"a[data-value='{data_value}']")
@@ -73,9 +66,10 @@ def scrape_lineups(start_map=None, start_side=None):
             driver.execute_script("arguments[0].scrollIntoView();", element)
 
             # Click on the map option
-            element.click()
+            driver.execute_script(
+                "arguments[0].click();", element)
 
-            time.sleep(5)  # Wait for 5 seconds after clicking on the map
+            time.sleep(3)  # Wait for 5 seconds after clicking on the map
 
             # Define the sides and corresponding data-values
             side_values = {"All": "0", "Defense": "1", "Attack": "2"}
@@ -98,7 +92,8 @@ def scrape_lineups(start_map=None, start_side=None):
                         "arguments[0].scrollIntoView();", side_button)
 
                     # Click on the side button
-                    side_button.click()
+                    driver.execute_script(
+                        "arguments[0].click();", side_button)
 
                     # Wait for a short time after clicking on the side
                     time.sleep(2)
@@ -107,7 +102,7 @@ def scrape_lineups(start_map=None, start_side=None):
                     print(f"Side button not found for: {side}")
 
                 # Scroll down to load more lineup boxes
-                SCROLL_PAUSE_TIME = 6
+                SCROLL_PAUSE_TIME = 5
                 last_height = driver.execute_script(
                     "return document.body.scrollHeight")
 
@@ -123,7 +118,7 @@ def scrape_lineups(start_map=None, start_side=None):
                         break
                     last_height = new_height
 
-                time.sleep(5)  # Wait for 5 seconds after scrolling
+                # Wait for 5 seconds after scrolling
 
                 # Find all elements with the class 'lineup-box' within the lineups_grid
                 lineup_boxes = driver.find_elements(
@@ -146,17 +141,20 @@ def scrape_lineups(start_map=None, start_side=None):
                         driver.execute_script(
                             "arguments[0].click();", lineup_box)
 
-                        time.sleep(6)
+                        time.sleep(5)
 
                         # Wait for the modal to be present
-                        modal_wait = WebDriverWait(driver, 20)
+                        modal_wait = WebDriverWait(driver, 30)
                         modal = modal_wait.until(
                             EC.presence_of_element_located(
                                 (By.CSS_SELECTOR, "#viewer_background #viewer_container #viewer_full"))
                         )
 
+                        # Wait for the modal to be visible
+                        time.sleep(2)
+
                         # Extract max image number from #viewer_max_image span
-                        image_wait = WebDriverWait(driver, 20)
+                        image_wait = WebDriverWait(driver, 30)
                         max_image_element = image_wait.until(
                             EC.presence_of_element_located(
                                 (By.ID, "viewer_max_image"))
@@ -245,4 +243,4 @@ def scrape_lineups(start_map=None, start_side=None):
 
 # Example usage:
 # If you want to start scraping from a specific map and side:
-scrape_lineups(start_map="Sunset", start_side="Defense")
+scrape_lineups(start_map="Lotus")

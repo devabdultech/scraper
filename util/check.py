@@ -16,9 +16,7 @@ def check_empty_description_text(*file_paths):
     return empty_description_files
 
 
-cleaned_data = check_empty_description_text("../scraped_data_bind_all.json", "../scraped_data_bind_defense.json", "../scraped_data_bind_attack.json",
-                                            "../scraped_data_haven_all.json", "../scraped_data_haven_defense.json", "../scraped_data_haven_attack.json", "../scraped_data_sunset_all.json", "../scraped_data_sunset_defense.json")
-
+cleaned_data = check_empty_description_text("../scraped_data_split_all.json", "../scraped_data_split_defense.json", "../scraped_data_split_attack.json")
 # Print the results
 for item in cleaned_data:
     print(f"File: {item['file_path']}, Line Number: {

@@ -144,21 +144,21 @@ def scrape_lineups(start_map=None, start_side=None):
                         print(f"{GREEN}Found {len(lineup_boxes)} lineup boxes for {
                               side_text} side{RESET}")
 
-                    # Iterate through each lineup box
-                    for lineup_box in lineup_boxes:
-                        # Extract title and data-id
-                        title = lineup_box.find_element(
-                            By.CLASS_NAME, 'lineup-box-title').text
-                        data_id = lineup_box.get_attribute('data-id')
+                        # Iterate through each lineup box
+                        for lineup_box in lineup_boxes:
+                            # Extract title and data-id
+                            title = lineup_box.find_element(
+                                By.CLASS_NAME, 'lineup-box-title').text
+                            data_id = lineup_box.get_attribute('data-id')
 
-                        print(f"Title: {title}, Data ID: {data_id}")
+                            print(f"Title: {title}, Data ID: {data_id}")
 
-                        # Click on the lineup box to open the modal
-                        driver.execute_script(
-                            "arguments[0].scrollIntoView();", lineup_box)
-                        driver.execute_script(
-                            "arguments[0].click();", lineup_box)
-                        time.sleep(2)
+                            # Click on the lineup box to open the modal
+                            driver.execute_script(
+                                "arguments[0].scrollIntoView();", lineup_box)
+                            driver.execute_script(
+                                "arguments[0].click();", lineup_box)
+                            time.sleep(2)
 
                     break
 
